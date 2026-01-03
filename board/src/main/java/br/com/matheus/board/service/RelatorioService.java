@@ -20,19 +20,36 @@ public class RelatorioService {
     }
 
     // ============================================================
-    // 1. Relatório de tempo por coluna
+    // Função utilitária para formatar Duration
     // ============================================================
-    public Map<String, Duration> tempoPorColuna(Card card) {
+    private String formatarDuration(Duration d) {
+        long horas = d.toHours();
+        long minutos = d.minusHours(horas).toMinutes();
+        long segundos = d.minusHours(horas).minusMinutes(minutos).getSeconds();
+
+        StringBuilder sb = new StringBuilder();
+
+        if (horas > 0) sb.append(horas).append("h ");
+        if (minutos > 0) sb.append(minutos).append("m ");
+        if (segundos > 0 || sb.isEmpty()) sb.append(segundos).append("s");
+
+        return sb.toString().trim();
+    }
+
+    // ============================================================
+    // 1. Relatório de tempo por coluna (versão amigável)
+    // ============================================================
+    public Map<String, String> tempoPorColuna(Card card) {
 
         List<CardMovimentacao> movs =
                 movimentacaoRepository.findByCardOrderByDataEntradaAsc(card);
 
-        Map<String, Duration> resultado = new LinkedHashMap<>();
+        Map<String, String> resultado = new LinkedHashMap<>();
 
         for (CardMovimentacao mov : movs) {
             if (mov.getDataSaida() != null) {
                 Duration dur = Duration.between(mov.getDataEntrada(), mov.getDataSaida());
-                resultado.put(mov.getColuna().getNome(), dur);
+                resultado.put(mov.getColuna().getNome(), formatarDuration(dur));
             }
         }
 
@@ -40,7 +57,7 @@ public class RelatorioService {
     }
 
     // ============================================================
-    // 2. Relatório de bloqueios
+    // 2. Relatório de bloqueios (versão amigável)
     // ============================================================
     public List<Map<String, Object>> relatorioBloqueios(Card card) {
 
@@ -51,7 +68,7 @@ public class RelatorioService {
 
         for (CardBloqueio b : bloqueios) {
 
-            Map<String, Object> item = new HashMap<>();
+            Map<String, Object> item = new LinkedHashMap<>();
             item.put("motivo_bloqueio", b.getMotivoBloqueio());
             item.put("data_bloqueio", b.getDataBloqueio());
             item.put("motivo_desbloqueio", b.getMotivoDesbloqueio());
@@ -59,7 +76,9 @@ public class RelatorioService {
 
             if (b.getDataDesbloqueio() != null) {
                 Duration dur = Duration.between(b.getDataBloqueio(), b.getDataDesbloqueio());
-                item.put("tempo_bloqueado", dur);
+                item.put("tempo_bloqueado", formatarDuration(dur));
+            } else {
+                item.put("tempo_bloqueado", "Ainda bloqueado");
             }
 
             resultado.add(item);

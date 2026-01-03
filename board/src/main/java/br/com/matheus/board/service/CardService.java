@@ -68,6 +68,12 @@ public class CardService {
             throw new RuntimeException("Card está bloqueado e não pode ser movido");
         }
 
+        // ❗ Impedir mover se estiver em FINAL ou CANCELADO
+        TipoColuna tipoAtual = card.getColunaAtual().getTipo();
+        if (tipoAtual == TipoColuna.FINAL || tipoAtual == TipoColuna.CANCELAMENTO) {
+            throw new RuntimeException("Card já está em uma coluna terminal e não pode ser movido");
+        }
+
         List<Coluna> colunas = colunaRepository.findByBoardOrderByOrdemAsc(card.getBoard());
 
         int indexAtual = colunas.indexOf(card.getColunaAtual());
@@ -78,7 +84,7 @@ public class CardService {
 
         Coluna proxima = colunas.get(indexAtual + 1);
 
-        // Atualizar movimentação da coluna atual
+        // Fechar movimentação atual
         movimentacaoRepository.findByCardAndColunaOrderByDataEntradaAsc(card, card.getColunaAtual())
                 .stream()
                 .filter(m -> m.getDataSaida() == null)
@@ -193,14 +199,19 @@ public class CardService {
 
         return card;
     }
-    
-    
 
+    // ============================================================
+    // 6. Buscar Card por ID
+    // ============================================================
     public Card buscarPorId(Long id) {
         return cardRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Card não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Card não encontrado"));
     }
 
-	
-	
+    // ============================================================
+    // 7. Listar cards por board
+    // ============================================================
+    public List<Card> listarPorBoard(Board board) {
+        return cardRepository.findByBoard(board);
+    }
 }
