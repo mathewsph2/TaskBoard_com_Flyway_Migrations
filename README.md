@@ -76,5 +76,6 @@ Ao criar um board, o sistema monta automaticamente:
 - **Spring Data JPA**
 - **MySQL**
 - **Console I/O (Scanner)**
+- **Flyway**
 
 ---
